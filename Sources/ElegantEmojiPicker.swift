@@ -15,7 +15,7 @@ open class ElegantEmojiPicker: UIViewController {
     public weak var delegate: ElegantEmojiPickerDelegate?
     public let config: ElegantConfiguration
     public let localization: ElegantLocalization
-    public let background: UIColor
+    public let background: UIColor?
 
     let padding = 16.0
     let topElementHeight = 40.0
@@ -65,7 +65,7 @@ open class ElegantEmojiPicker: UIViewController {
         delegate: ElegantEmojiPickerDelegate? = nil,
         configuration: ElegantConfiguration = ElegantConfiguration(),
         localization: ElegantLocalization = ElegantLocalization(),
-        background: UIColor = .systemBackground,
+        background: UIColor? = .systemBackground,
         sourceView: UIView? = nil,
         sourceNavigationBarButton: UIBarButtonItem? = nil
     ) {
@@ -186,7 +186,9 @@ open class ElegantEmojiPicker: UIViewController {
     }
 
     open override func viewDidLoad() {
-        view.backgroundColor = background
+        if let background {
+            view.backgroundColor = background
+        }
     }
 
     func AddToolbar () {
