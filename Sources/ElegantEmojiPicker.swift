@@ -618,3 +618,8 @@ extension ElegantEmojiPicker {
     }
     
 }
+
+@available(iOS 17.0, *)
+#Preview {
+    ElegantEmojiPicker()
+}
