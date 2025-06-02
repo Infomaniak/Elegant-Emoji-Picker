@@ -38,7 +38,7 @@ public struct ElegantEmojiPickerView: UIViewControllerRepresentable {
         }
 
         let emojiPicker = ElegantEmojiPicker(
-            delegate: nil,
+            delegate: context.coordinator,
             configuration: configuration,
             localization: localization,
             background: background,
