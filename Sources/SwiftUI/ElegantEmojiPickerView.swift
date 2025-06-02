@@ -13,14 +13,14 @@ public struct ElegantEmojiPickerView: UIViewControllerRepresentable {
 
     private let configuration: ElegantConfiguration
     private let localization: ElegantLocalization
-    private let backgroundColor: Color
+    private let backgroundColor: Color?
     private let sourceNavigationBarButton: UIBarButtonItem?
 
     public init(
         selectedEmoji: Binding<Emoji?>,
         configuration: ElegantConfiguration = ElegantConfiguration(),
         localization: ElegantLocalization = ElegantLocalization(),
-        background: Color,
+        background: Color? = nil,
         sourceNavigationBarButton: UIBarButtonItem? = nil
     ) {
         _selectedEmoji = selectedEmoji
@@ -32,11 +32,16 @@ public struct ElegantEmojiPickerView: UIViewControllerRepresentable {
     }
 
     public func makeUIViewController(context: Context) -> ElegantEmojiPicker {
+        var background: UIColor?
+        if let backgroundColor {
+            background = UIColor(backgroundColor)
+        }
+
         let emojiPicker = ElegantEmojiPicker(
             delegate: nil,
             configuration: configuration,
             localization: localization,
-            background: UIColor(backgroundColor),
+            background: background,
             sourceNavigationBarButton: sourceNavigationBarButton
         )
 
