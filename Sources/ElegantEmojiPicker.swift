@@ -15,12 +15,11 @@ open class ElegantEmojiPicker: UIViewController {
     public weak var delegate: ElegantEmojiPickerDelegate?
     public let config: ElegantConfiguration
     public let localization: ElegantLocalization
-    
+    public let background: UIColor
+
     let padding = 16.0
     let topElementHeight = 40.0
-    
-    let backgroundBlur = UIVisualEffectView(effect: UIBlurEffect(style: .systemUltraThinMaterial))
-    
+
     var searchFieldBackground: UIVisualEffectView?
     var searchField: UITextField?
     var clearButton: UIButton?
@@ -62,18 +61,26 @@ open class ElegantEmojiPicker: UIViewController {
     ///   - localization: provide a localization to change texts on all labels
     ///   - sourceView: provide a source view for a popover presentation style.
     ///   - sourceNavigationBarButton: provide a source navigation bar button for a popover presentation style.
-    public init (delegate: ElegantEmojiPickerDelegate? = nil, configuration: ElegantConfiguration = ElegantConfiguration(), localization: ElegantLocalization = ElegantLocalization(), sourceView: UIView? = nil, sourceNavigationBarButton: UIBarButtonItem? = nil) {
+    public init (
+        delegate: ElegantEmojiPickerDelegate? = nil,
+        configuration: ElegantConfiguration = ElegantConfiguration(),
+        localization: ElegantLocalization = ElegantLocalization(),
+        background: UIColor = .systemBackground,
+        sourceView: UIView? = nil,
+        sourceNavigationBarButton: UIBarButtonItem? = nil
+    ) {
         self.delegate = delegate
         self.config = configuration
         self.localization = localization
+        self.background = background
         super.init(nibName: nil, bundle: nil)
         
         self.emojiSections = self.delegate?.emojiPicker(self, loadEmojiSections: config, localization) ?? ElegantEmojiPicker.getDefaultEmojiSections(config: config, localization: localization)
         
-        if let sourceView = sourceView, !AppConfiguration.isIPhone, AppConfiguration.windowFrame.width > 500 {
+        if let sourceView, !AppConfiguration.isIPhone, AppConfiguration.windowFrame.width > 500 {
             self.modalPresentationStyle = .popover
             self.popoverPresentationController?.sourceView = sourceView
-        } else if let sourceNavigationBarButton = sourceNavigationBarButton, !AppConfiguration.isIPhone, AppConfiguration.windowFrame.width > 500 {
+        } else if let sourceNavigationBarButton, !AppConfiguration.isIPhone, AppConfiguration.windowFrame.width > 500 {
             self.modalPresentationStyle = .popover
             self.popoverPresentationController?.barButtonItem = sourceNavigationBarButton
         } else {
@@ -85,8 +92,6 @@ open class ElegantEmojiPicker: UIViewController {
         }
         
         self.presentationController?.delegate = self
-        
-        self.view.addSubview(backgroundBlur, anchors: LayoutAnchor.fullFrame)
         
         if config.showSearch {
             searchFieldBackground = UIVisualEffectView(effect: UIBlurEffect(style: .systemUltraThinMaterial))
@@ -179,7 +184,11 @@ open class ElegantEmojiPicker: UIViewController {
         
         if config.showToolbar && emojiSections.count > 1 { AddToolbar() }
     }
-    
+
+    open override func viewDidLoad() {
+        view.backgroundColor = background
+    }
+
     func AddToolbar () {
         toolbar = SectionsToolbar(sections: emojiSections, emojiPicker: self)
         self.view.addSubview(toolbar!, anchors: [.centerX(0)])
@@ -195,10 +204,6 @@ open class ElegantEmojiPicker: UIViewController {
         super.viewDidLayoutSubviews()
         collectionLayout.headerReferenceSize = CGSize(width: collectionView.frame.width, height: 50)
         fadeContainer.layer.mask?.frame = fadeContainer.bounds
-    }
-    
-    public override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        self.view.backgroundColor = UIScreen.main.traitCollection.userInterfaceStyle == .light ? .black.withAlphaComponent(0.1) : .clear
     }
     
     @objc func TappedClose () {
