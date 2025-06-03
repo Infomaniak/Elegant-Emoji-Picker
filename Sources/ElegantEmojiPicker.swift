@@ -222,8 +222,21 @@ open class ElegantEmojiPicker: UIViewController {
     }
     
     func didSelectEmoji (_ emoji: Emoji?) {
+
+
         delegate?.emojiPicker(self, didSelectEmoji: emoji)
         if delegate?.emojiPickerShouldDismissAfterSelection(self) ?? true { self.dismiss(animated: true) }
+    }
+
+    private func saveEmojiUsage(_ emoji: Emoji?) {
+        guard let emoji else { return }
+
+        if var usage = UserDefaults.standard.dictionary(forKey: "mostUsedEmojis") as? [String: Int] {
+            usage[emoji.description, default: 0] += 1
+            UserDefaults.standard.set(usage, forKey: "mostUsedEmojis")
+        } else {
+            UserDefaults.standard.set([emoji.description: 1], forKey: "mostUsedEmojis")
+        }
     }
 }
 
@@ -560,7 +573,16 @@ extension ElegantEmojiPicker {
         var emojiSections = [EmojiSection]()
 
         // TODO: Append emojis here
-        emojiSections.append(EmojiSection(title: "Recently Used", icon: EmojiCategory.UsedRegularly.image, emojis: []))
+        if let recentlyUsedEmojis = UserDefaults.standard.dictionary(forKey: "mostUsedEmojis") as? [String: Int] {
+            let sortedEmojisStr = recentlyUsedEmojis.sorted { lhs, rhs in
+                return lhs.value < rhs.value
+            }.map(\.key).prefix(21)
+
+            let emojisToUse = emojis.filter { sortedEmojisStr.contains($0.emoji) }
+
+            emojiSections
+                .append(EmojiSection(title: "Recently Used", icon: EmojiCategory.RecentlyUsed.image, emojis: emojisToUse))
+        }
 
         let currentIOSVersion = UIDevice.current.systemVersion
         

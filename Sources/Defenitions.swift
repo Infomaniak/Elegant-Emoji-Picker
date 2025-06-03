@@ -139,7 +139,7 @@ public enum EmojiSkinTone: String, CaseIterable {
 }
 
 public enum EmojiCategory: String, CaseIterable, Decodable {
-    case UsedRegularly = "Used Regularly"
+    case RecentlyUsed = "Recently Used"
     case SmileysAndEmotion = "Smileys & Emotion"
     case PeopleAndBody = "People & Body"
     case AnimalsAndNature = "Animals & Nature"
@@ -152,7 +152,7 @@ public enum EmojiCategory: String, CaseIterable, Decodable {
     
     public var image: UIImage? {
         switch self {
-        case .UsedRegularly:
+        case .RecentlyUsed:
             return UIImage(systemName: "clock", withConfiguration: UIImage.SymbolConfiguration(weight: .medium))
         case .PeopleAndBody:
             return UIImage(systemName: "hand.wave", withConfiguration: UIImage.SymbolConfiguration(weight: .medium))
@@ -163,7 +163,7 @@ public enum EmojiCategory: String, CaseIterable, Decodable {
     
     var index: Int {
         switch self {
-        case .UsedRegularly: return 0
+        case .RecentlyUsed: return 0
         case .SmileysAndEmotion: return 1
         case .PeopleAndBody: return 2
         case .AnimalsAndNature: return 3
