@@ -231,8 +231,8 @@ open class ElegantEmojiPicker: UIViewController {
 
 extension ElegantEmojiPicker {
     func didSelectSection(_ index: Int) {
-        collectionView.scrollToItem(at: IndexPath(row: 0, section: index), at: .centeredVertically, animated: true)
-        
+        scrollToSection(index)
+
         overridingFocusedSection = true
         self.focusedSection = index
         self.toolbar?.UpdateCorrectSelection(animated: true)
@@ -240,7 +240,7 @@ extension ElegantEmojiPicker {
             self.overridingFocusedSection = false
         }
     }
-    
+
     func HideBuiltInToolbar () {
         toolbarBottomConstraint?.constant = 50
         UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 0.4) {
@@ -248,12 +248,25 @@ extension ElegantEmojiPicker {
             self.view.layoutIfNeeded()
         }
     }
-    
+
     func ShowBuiltInToolbar () {
         toolbarBottomConstraint?.constant = -padding
         UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 0.4) {
             self.toolbar?.alpha = 1
             self.view.layoutIfNeeded()
+        }
+    }
+
+    private func scrollToSection(_ index: Int) {
+        collectionView.scrollToItem(at: IndexPath(row: 0, section: index), at: .top, animated: true)
+
+        if let headerAttributes = collectionView.layoutAttributesForSupplementaryElement(
+            ofKind: UICollectionView.elementKindSectionHeader,
+            at: IndexPath(row: 0, section: index)
+        ) {
+            let headerFrame = headerAttributes.frame
+            let offset = CGPoint(x: 0, y: headerFrame.origin.y - collectionView.contentInset.top)
+            collectionView.setContentOffset(offset, animated: true)
         }
     }
 }
