@@ -139,6 +139,7 @@ public enum EmojiSkinTone: String, CaseIterable {
 }
 
 public enum EmojiCategory: String, CaseIterable, Decodable {
+    case UsedRegularly = "Used Regularly"
     case SmileysAndEmotion = "Smileys & Emotion"
     case PeopleAndBody = "People & Body"
     case AnimalsAndNature = "Animals & Nature"
@@ -151,22 +152,27 @@ public enum EmojiCategory: String, CaseIterable, Decodable {
     
     public var image: UIImage? {
         switch self {
-        case .PeopleAndBody: return UIImage(systemName: "hand.wave", withConfiguration: UIImage.SymbolConfiguration(weight: .medium))?.withRenderingMode(.alwaysTemplate)
-        default: return UIImage(named: self.rawValue, in: .module, with: nil)?.withRenderingMode(.alwaysTemplate)
+        case .UsedRegularly:
+            return UIImage(systemName: "clock", withConfiguration: UIImage.SymbolConfiguration(weight: .medium))
+        case .PeopleAndBody:
+            return UIImage(systemName: "hand.wave", withConfiguration: UIImage.SymbolConfiguration(weight: .medium))
+        default:
+            return UIImage(named: self.rawValue, in: .module, with: nil)
         }
     }
     
     var index: Int {
         switch self {
-        case .SmileysAndEmotion: return 0
-        case .PeopleAndBody: return 1
-        case .AnimalsAndNature: return 2
-        case .FoodAndDrink: return 3
-        case .TravelAndPlaces: return 4
-        case .Activities: return 5
-        case .Objects: return 6
-        case .Symbols: return 7
-        case .Flags: return 8
+        case .UsedRegularly: return 0
+        case .SmileysAndEmotion: return 1
+        case .PeopleAndBody: return 2
+        case .AnimalsAndNature: return 3
+        case .FoodAndDrink: return 4
+        case .TravelAndPlaces: return 5
+        case .Activities: return 6
+        case .Objects: return 7
+        case .Symbols: return 8
+        case .Flags: return 9
         }
     }
 }

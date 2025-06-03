@@ -101,7 +101,7 @@ class SectionsToolbar: UIView {
             
             self.heightAnchor.constraint(equalTo: self.widthAnchor).isActive = true
             
-            imageView.image = icon
+            imageView.image = icon?.withRenderingMode(.alwaysTemplate)
             imageView.contentMode = .scaleAspectFit
             imageView.tintColor = .systemGray
             self.addSubview(imageView, anchors: LayoutAnchor.fullFrame(8))
