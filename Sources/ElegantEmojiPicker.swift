@@ -558,7 +558,10 @@ extension ElegantEmojiPicker {
         })
         
         var emojiSections = [EmojiSection]()
-        
+
+        // TODO: Append emojis here
+        emojiSections.append(EmojiSection(title: "Recently Used", icon: EmojiCategory.UsedRegularly.image, emojis: []))
+
         let currentIOSVersion = UIDevice.current.systemVersion
         
         for emoji in emojis {
