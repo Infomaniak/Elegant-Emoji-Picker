@@ -11,7 +11,9 @@ import UIKit
 /// Present this view controller when you want to offer users emoji selection. Conform to its delegate ElegantEmojiPickerDelegate and pass it to the view controller to interact with it and receive user's selection. 
 open class ElegantEmojiPicker: UIViewController {
     required public init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
-    
+
+    static let recentlyUsedEmojisCount = 21
+
     public weak var delegate: ElegantEmojiPickerDelegate?
     public let config: ElegantConfiguration
     public let localization: ElegantLocalization
@@ -568,37 +570,42 @@ extension ElegantEmojiPicker {
         })
         
         var emojiSections = [EmojiSection]()
-
-        // TODO: Append emojis here
-        let emojiUsage = UserDefaults.standard.emojisUsage
-        if !emojiUsage.isEmpty {
-            let sortedEmojis = emojiUsage.sorted { lhs, rhs in
-                return lhs.value < rhs.value
-            }.map(\.key).prefix(21)
-
-            emojiSections
-                .append(EmojiSection(title: "Recently Used", icon: EmojiCategory.RecentlyUsed.image, emojis: Array(sortedEmojis)))
+        if let recentlyUsedEmojisSection = getRecentlyUsedEmojiSection(localization: localization) {
+            emojiSections.append(recentlyUsedEmojisSection)
         }
 
         let currentIOSVersion = UIDevice.current.systemVersion
-        
         for emoji in emojis {
             if emoji.iOSVersion.compare(currentIOSVersion, options: .numeric) == .orderedDescending { continue } // Skip unsupported emojis.
             
-            let localizedCategoryTitle = localization.emojiCategoryTitles[emoji.category] ?? emoji.category.rawValue
-            
+            let localizedCategoryTitle = emoji.category.localizedTitle(localization: localization)
+
             if let section = emojiSections.firstIndex(where: { $0.title == localizedCategoryTitle }) {
                 emojiSections[section].emojis.append(emoji)
             } else if config.categories.contains(emoji.category) {
-                emojiSections.append(
-                    EmojiSection(title: localizedCategoryTitle, icon: emoji.category.image, emojis: [emoji])
-                )
+                emojiSections.append(EmojiSection(title: localizedCategoryTitle, icon: emoji.category.image, emojis: [emoji]))
             }
         }
-        
+
         return emojiSections
     }
-    
+
+    private static func getRecentlyUsedEmojiSection(localization: ElegantLocalization) -> EmojiSection? {
+        let emojiUsage = UserDefaults.standard.emojisUsage
+        guard !emojiUsage.isEmpty else { return nil }
+
+        let mostUsedEmojis = emojiUsage
+            .sorted { $0.value > $1.value }
+            .map(\.key)
+            .prefix(Self.recentlyUsedEmojisCount)
+
+        return EmojiSection(
+            title: EmojiCategory.RecentlyUsed.localizedTitle(localization: localization),
+            icon: EmojiCategory.RecentlyUsed.image,
+            emojis: Array(mostUsedEmojis)
+        )
+    }
+
     /// Get emoji search results for a given prompt, using the default search algorithm. First looks for matches in aliases, then in tags, and lastly in description. Sorts search results by relevance.
     /// - Parameters:
     ///   - prompt: Search prompt to use.

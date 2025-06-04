@@ -10,7 +10,7 @@ import UIKit
 import CoreText
 
 /// Struct representing a single emoji
-public struct Emoji: Decodable, Equatable, Hashable {
+public struct Emoji: Codable, Equatable, Hashable {
     public let emoji: String
     public let description: String
     public let category: EmojiCategory
@@ -64,16 +64,16 @@ public struct Emoji: Decodable, Equatable, Hashable {
         return string
     }
     
-    enum CodingKeys: CodingKey {
+    enum CodingKeys: String, CodingKey {
         case emoji
         case description
         case category
         case aliases
         case tags
-        case skin_tones
-        case ios_version
+        case supportsSkinTones = "skin_tones"
+        case iOSVersion = "ios_version"
     }
-    
+
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.emoji = try container.decode(String.self, forKey: .emoji)
@@ -81,10 +81,10 @@ public struct Emoji: Decodable, Equatable, Hashable {
         self.category = try container.decode(EmojiCategory.self, forKey: .category)
         self.aliases = try container.decode([String].self, forKey: .aliases)
         self.tags = try container.decode([String].self, forKey: .tags)
-        self.supportsSkinTones = try container.decodeIfPresent(Bool.self, forKey: .skin_tones) ?? false
-        self.iOSVersion = try container.decode(String.self, forKey: .ios_version)
+        self.supportsSkinTones = try container.decodeIfPresent(Bool.self, forKey: .supportsSkinTones) ?? false
+        self.iOSVersion = try container.decode(String.self, forKey: .iOSVersion)
     }
-    
+
     /// Create an instance of an emoji
     /// - Parameters:
     ///    - emoji: string representation of this emoji
@@ -138,7 +138,7 @@ public enum EmojiSkinTone: String, CaseIterable {
     case Dark = "🏿"
 }
 
-public enum EmojiCategory: String, CaseIterable, Decodable {
+public enum EmojiCategory: String, CaseIterable, Codable {
     case RecentlyUsed = "Recently Used"
     case SmileysAndEmotion = "Smileys & Emotion"
     case PeopleAndBody = "People & Body"
@@ -174,6 +174,10 @@ public enum EmojiCategory: String, CaseIterable, Decodable {
         case .Symbols: return 8
         case .Flags: return 9
         }
+    }
+
+    func localizedTitle(localization: ElegantLocalization) -> String {
+        return localization.emojiCategoryTitles[self] ?? rawValue
     }
 }
 

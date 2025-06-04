@@ -10,10 +10,16 @@ import Foundation
 extension UserDefaults {
     var emojisUsage: [Emoji: Int] {
         get {
-            return dictionary(forKey: "emojiUsage") as? [Emoji: Int] ?? [:]
+            guard let encodedValue = data(forKey: "emojisUsage"),
+                  let decodedValue = try? JSONDecoder().decode([Emoji: Int].self, from: encodedValue) else {
+                return [:]
+            }
+
+            return decodedValue
         }
         set {
-            set(newValue, forKey: "emojiUsage")
+            guard let encodedValue = try? JSONEncoder().encode(newValue) else { return }
+            set(encodedValue, forKey: "emojisUsage")
         }
     }
 }
