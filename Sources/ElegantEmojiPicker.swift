@@ -488,19 +488,12 @@ extension ElegantEmojiPicker {
         
         let visibleIndexPaths = self.collectionView.indexPathsForVisibleItems
         DispatchQueue.global(qos: .userInitiated).async {
-            var sectionCounts = [Int: Int]()
-            
-            for indexPath in visibleIndexPaths {
-                let section = indexPath.section
-                sectionCounts[section] = (sectionCounts[section] ?? 0) + 1
-            }
+            guard let firstVisibleSection = visibleIndexPaths.min(by: { $0.section < $1.section })?.section else { return }
 
-            let mostVisibleSection = sectionCounts.max(by: { $0.1 < $1.1 })?.key ?? 0
-            
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
-                
-                self.focusedSection = mostVisibleSection
+
+                self.focusedSection = firstVisibleSection
                 if self.prevFocusedSection != self.focusedSection {
                     self.delegate?.emojiPicker(self, focusedSectionChanged: self.focusedSection, from: self.prevFocusedSection)
                     self.toolbar?.UpdateCorrectSelection()
