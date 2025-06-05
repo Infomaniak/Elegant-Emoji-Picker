@@ -22,4 +22,13 @@ extension UserDefaults {
             set(encodedValue, forKey: "emojisUsage")
         }
     }
+
+    var skinTones: [String: String] {
+        get {
+            return object(forKey: "Finalet_Elegant_Emoji_Picker_Skin_Tones_Key") as? [String:String] ?? [:]
+        }
+        set {
+            set(newValue, forKey: "Finalet_Elegant_Emoji_Picker_Skin_Tones_Key")
+        }
+    }
 }

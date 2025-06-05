@@ -19,6 +19,8 @@ open class ElegantEmojiPicker: UIViewController {
     public let localization: ElegantLocalization
     public let background: UIColor?
 
+    let userDefaultsStore: UserDefaults
+
     let padding = 16.0
     let topElementHeight = 40.0
 
@@ -68,6 +70,7 @@ open class ElegantEmojiPicker: UIViewController {
         configuration: ElegantConfiguration = ElegantConfiguration(),
         localization: ElegantLocalization = ElegantLocalization(),
         background: UIColor? = .systemBackground,
+        userDefaultsStore: UserDefaults = .standard,
         sourceView: UIView? = nil,
         sourceNavigationBarButton: UIBarButtonItem? = nil
     ) {
@@ -75,10 +78,12 @@ open class ElegantEmojiPicker: UIViewController {
         self.config = configuration
         self.localization = localization
         self.background = background
+        self.userDefaultsStore = userDefaultsStore
         super.init(nibName: nil, bundle: nil)
         
-        self.emojiSections = self.delegate?.emojiPicker(self, loadEmojiSections: config, localization) ?? ElegantEmojiPicker.getDefaultEmojiSections(config: config, localization: localization)
-        
+        self.emojiSections = self.delegate?.emojiPicker(self, loadEmojiSections: config, localization, userDefaultsStore: userDefaultsStore)
+            ?? ElegantEmojiPicker.getDefaultEmojiSections(config: config, localization: localization, userDefaultsStore: userDefaultsStore)
+
         if let sourceView, !AppConfiguration.isIPhone, AppConfiguration.windowFrame.width > 500 {
             self.modalPresentationStyle = .popover
             self.popoverPresentationController?.sourceView = sourceView
@@ -233,9 +238,9 @@ open class ElegantEmojiPicker: UIViewController {
     private func saveEmojiUsage(_ emoji: Emoji?) {
         guard let emoji else { return }
 
-        var emojiUsage = UserDefaults.standard.emojisUsage
+        var emojiUsage = userDefaultsStore.emojisUsage
         emojiUsage[emoji, default: 0] += 1
-        UserDefaults.standard.emojisUsage = emojiUsage
+        userDefaultsStore.emojisUsage = emojiUsage
     }
 }
 
@@ -470,12 +475,12 @@ extension ElegantEmojiPicker {
     
     func PersistSkinTone (originalEmoji: Emoji, skinTone: EmojiSkinTone?) {
         if !config.persistSkinTones { return }
-        
-        ElegantEmojiPicker.persistedSkinTones[originalEmoji.description] = skinTone?.rawValue ?? (config.defaultSkinTone == nil ? nil : "")
+
+        userDefaultsStore.skinTones[originalEmoji.description] = skinTone?.rawValue ?? (config.defaultSkinTone == nil ? nil : "")
     }
     
     public func CleanPersistedSkinTones () {
-        ElegantEmojiPicker.persistedSkinTones = [:]
+        userDefaultsStore.skinTones = [:]
     }
 }
 
@@ -514,26 +519,6 @@ extension ElegantEmojiPicker: UIAdaptivePresentationControllerDelegate {
 //MARK: Static methods
 
 extension ElegantEmojiPicker {
-    
-    /// Persists skin tone for a specified emoji.
-    /// - Parameters:
-    ///   - originalEmoji: Standard yellow emoji for which to persist a skin tone.
-    ///   - skinTone: Skin tone to save. Pass nil to remove saved skin tone.
-    static public func PersistSkinTone (originalEmoji: Emoji, skinTone: EmojiSkinTone?) {
-        ElegantEmojiPicker.persistedSkinTones[originalEmoji.description] = skinTone?.rawValue
-    }
-    
-    /// Delete all persisted emoji skin tones.
-    static public func CleanPersistedSkinTones () {
-        ElegantEmojiPicker.persistedSkinTones = [:]
-    }
-    
-    /// Dictionary containing all emojis with persisted skin tones. [Emoji : Skin tone]
-    static public var persistedSkinTones: [String:String] {
-        get { return UserDefaults.standard.object(forKey: "Finalet_Elegant_Emoji_Picker_Skin_Tones_Key") as? [String:String] ?? [:] }
-        set { UserDefaults.standard.set(newValue, forKey: "Finalet_Elegant_Emoji_Picker_Skin_Tones_Key") }
-    }
-    
     /// Returns an array of all available emojis. Use this method to retrieve emojis for your own collection.
     /// - Returns: Array of all emojis.
     static public func getAllEmoji () -> [Emoji] {
@@ -546,10 +531,10 @@ extension ElegantEmojiPicker {
     ///   - config: Config used to setup the emoji picker.
     ///   - localization: Localization used to setup the emoji picker.
     /// - Returns: Array of default sections [EmojiSection] containing all available emojis.
-    static public func getDefaultEmojiSections(config: ElegantConfiguration = ElegantConfiguration(), localization: ElegantLocalization = ElegantLocalization()) -> [EmojiSection]  {
+    static public func getDefaultEmojiSections(config: ElegantConfiguration = ElegantConfiguration(), localization: ElegantLocalization = ElegantLocalization(), userDefaultsStore: UserDefaults = .standard) -> [EmojiSection]  {
         var emojis = getAllEmoji()
         
-        let persistedSkinTones = ElegantEmojiPicker.persistedSkinTones
+        let persistedSkinTones = userDefaultsStore.skinTones
         emojis = emojis.map({
             if !$0.supportsSkinTones { return $0 }
             
@@ -563,7 +548,10 @@ extension ElegantEmojiPicker {
         })
         
         var emojiSections = [EmojiSection]()
-        if let recentlyUsedEmojisSection = getRecentlyUsedEmojiSection(localization: localization) {
+        if let recentlyUsedEmojisSection = getRecentlyUsedEmojiSection(
+            localization: localization,
+            userDefaultsStore: userDefaultsStore
+        ) {
             emojiSections.append(recentlyUsedEmojisSection)
         }
 
@@ -583,8 +571,8 @@ extension ElegantEmojiPicker {
         return emojiSections
     }
 
-    private static func getRecentlyUsedEmojiSection(localization: ElegantLocalization) -> EmojiSection? {
-        let emojiUsage = UserDefaults.standard.emojisUsage
+    private static func getRecentlyUsedEmojiSection(localization: ElegantLocalization, userDefaultsStore: UserDefaults) -> EmojiSection? {
+        let emojiUsage = userDefaultsStore.emojisUsage
         guard !emojiUsage.isEmpty else { return nil }
 
         let mostUsedEmojis = emojiUsage
