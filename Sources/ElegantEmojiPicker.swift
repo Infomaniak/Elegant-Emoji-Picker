@@ -11,11 +11,15 @@ import UIKit
 /// Present this view controller when you want to offer users emoji selection. Conform to its delegate ElegantEmojiPickerDelegate and pass it to the view controller to interact with it and receive user's selection. 
 open class ElegantEmojiPicker: UIViewController {
     required public init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
-    
+
+    static let recentlyUsedEmojisCount = 21
+
     public weak var delegate: ElegantEmojiPickerDelegate?
     public let config: ElegantConfiguration
     public let localization: ElegantLocalization
     public let background: UIColor?
+
+    let userDefaultsStore: UserDefaults
 
     let padding = 16.0
     let topElementHeight = 40.0
@@ -66,6 +70,7 @@ open class ElegantEmojiPicker: UIViewController {
         configuration: ElegantConfiguration = ElegantConfiguration(),
         localization: ElegantLocalization = ElegantLocalization(),
         background: UIColor? = .systemBackground,
+        userDefaultsStore: UserDefaults = .standard,
         sourceView: UIView? = nil,
         sourceNavigationBarButton: UIBarButtonItem? = nil
     ) {
@@ -73,10 +78,12 @@ open class ElegantEmojiPicker: UIViewController {
         self.config = configuration
         self.localization = localization
         self.background = background
+        self.userDefaultsStore = userDefaultsStore
         super.init(nibName: nil, bundle: nil)
         
-        self.emojiSections = self.delegate?.emojiPicker(self, loadEmojiSections: config, localization) ?? ElegantEmojiPicker.getDefaultEmojiSections(config: config, localization: localization)
-        
+        self.emojiSections = self.delegate?.emojiPicker(self, loadEmojiSections: config, localization, userDefaultsStore: userDefaultsStore)
+            ?? ElegantEmojiPicker.getDefaultEmojiSections(config: config, localization: localization, userDefaultsStore: userDefaultsStore)
+
         if let sourceView, !AppConfiguration.isIPhone, AppConfiguration.windowFrame.width > 500 {
             self.modalPresentationStyle = .popover
             self.popoverPresentationController?.sourceView = sourceView
@@ -222,8 +229,18 @@ open class ElegantEmojiPicker: UIViewController {
     }
     
     func didSelectEmoji (_ emoji: Emoji?) {
+        saveEmojiUsage(emoji)
+
         delegate?.emojiPicker(self, didSelectEmoji: emoji)
         if delegate?.emojiPickerShouldDismissAfterSelection(self) ?? true { self.dismiss(animated: true) }
+    }
+
+    private func saveEmojiUsage(_ emoji: Emoji?) {
+        guard let emoji else { return }
+
+        var emojiUsage = userDefaultsStore.emojisUsage
+        emojiUsage[emoji, default: 0] += 1
+        userDefaultsStore.emojisUsage = emojiUsage
     }
 }
 
@@ -458,12 +475,12 @@ extension ElegantEmojiPicker {
     
     func PersistSkinTone (originalEmoji: Emoji, skinTone: EmojiSkinTone?) {
         if !config.persistSkinTones { return }
-        
-        ElegantEmojiPicker.persistedSkinTones[originalEmoji.description] = skinTone?.rawValue ?? (config.defaultSkinTone == nil ? nil : "")
+
+        userDefaultsStore.skinTones[originalEmoji.description] = skinTone?.rawValue ?? (config.defaultSkinTone == nil ? nil : "")
     }
     
     public func CleanPersistedSkinTones () {
-        ElegantEmojiPicker.persistedSkinTones = [:]
+        userDefaultsStore.skinTones = [:]
     }
 }
 
@@ -476,19 +493,12 @@ extension ElegantEmojiPicker {
         
         let visibleIndexPaths = self.collectionView.indexPathsForVisibleItems
         DispatchQueue.global(qos: .userInitiated).async {
-            var sectionCounts = [Int: Int]()
-            
-            for indexPath in visibleIndexPaths {
-                let section = indexPath.section
-                sectionCounts[section] = (sectionCounts[section] ?? 0) + 1
-            }
+            guard let firstVisibleSection = visibleIndexPaths.min(by: { $0.section < $1.section })?.section else { return }
 
-            let mostVisibleSection = sectionCounts.max(by: { $0.1 < $1.1 })?.key ?? 0
-            
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
-                
-                self.focusedSection = mostVisibleSection
+
+                self.focusedSection = firstVisibleSection
                 if self.prevFocusedSection != self.focusedSection {
                     self.delegate?.emojiPicker(self, focusedSectionChanged: self.focusedSection, from: self.prevFocusedSection)
                     self.toolbar?.UpdateCorrectSelection()
@@ -509,26 +519,6 @@ extension ElegantEmojiPicker: UIAdaptivePresentationControllerDelegate {
 //MARK: Static methods
 
 extension ElegantEmojiPicker {
-    
-    /// Persists skin tone for a specified emoji.
-    /// - Parameters:
-    ///   - originalEmoji: Standard yellow emoji for which to persist a skin tone.
-    ///   - skinTone: Skin tone to save. Pass nil to remove saved skin tone.
-    static public func PersistSkinTone (originalEmoji: Emoji, skinTone: EmojiSkinTone?) {
-        ElegantEmojiPicker.persistedSkinTones[originalEmoji.description] = skinTone?.rawValue
-    }
-    
-    /// Delete all persisted emoji skin tones.
-    static public func CleanPersistedSkinTones () {
-        ElegantEmojiPicker.persistedSkinTones = [:]
-    }
-    
-    /// Dictionary containing all emojis with persisted skin tones. [Emoji : Skin tone]
-    static public var persistedSkinTones: [String:String] {
-        get { return UserDefaults.standard.object(forKey: "Finalet_Elegant_Emoji_Picker_Skin_Tones_Key") as? [String:String] ?? [:] }
-        set { UserDefaults.standard.set(newValue, forKey: "Finalet_Elegant_Emoji_Picker_Skin_Tones_Key") }
-    }
-    
     /// Returns an array of all available emojis. Use this method to retrieve emojis for your own collection.
     /// - Returns: Array of all emojis.
     static public func getAllEmoji () -> [Emoji] {
@@ -541,10 +531,10 @@ extension ElegantEmojiPicker {
     ///   - config: Config used to setup the emoji picker.
     ///   - localization: Localization used to setup the emoji picker.
     /// - Returns: Array of default sections [EmojiSection] containing all available emojis.
-    static public func getDefaultEmojiSections(config: ElegantConfiguration = ElegantConfiguration(), localization: ElegantLocalization = ElegantLocalization()) -> [EmojiSection]  {
+    static public func getDefaultEmojiSections(config: ElegantConfiguration = ElegantConfiguration(), localization: ElegantLocalization = ElegantLocalization(), userDefaultsStore: UserDefaults = .standard) -> [EmojiSection]  {
         var emojis = getAllEmoji()
         
-        let persistedSkinTones = ElegantEmojiPicker.persistedSkinTones
+        let persistedSkinTones = userDefaultsStore.skinTones
         emojis = emojis.map({
             if !$0.supportsSkinTones { return $0 }
             
@@ -558,26 +548,45 @@ extension ElegantEmojiPicker {
         })
         
         var emojiSections = [EmojiSection]()
-        
+        if let recentlyUsedEmojisSection = getRecentlyUsedEmojiSection(
+            localization: localization,
+            userDefaultsStore: userDefaultsStore
+        ) {
+            emojiSections.append(recentlyUsedEmojisSection)
+        }
+
         let currentIOSVersion = UIDevice.current.systemVersion
-        
         for emoji in emojis {
             if emoji.iOSVersion.compare(currentIOSVersion, options: .numeric) == .orderedDescending { continue } // Skip unsupported emojis.
             
-            let localizedCategoryTitle = localization.emojiCategoryTitles[emoji.category] ?? emoji.category.rawValue
-            
+            let localizedCategoryTitle = emoji.category.localizedTitle(localization: localization)
+
             if let section = emojiSections.firstIndex(where: { $0.title == localizedCategoryTitle }) {
                 emojiSections[section].emojis.append(emoji)
             } else if config.categories.contains(emoji.category) {
-                emojiSections.append(
-                    EmojiSection(title: localizedCategoryTitle, icon: emoji.category.image, emojis: [emoji])
-                )
+                emojiSections.append(EmojiSection(title: localizedCategoryTitle, icon: emoji.category.image, emojis: [emoji]))
             }
         }
-        
+
         return emojiSections
     }
-    
+
+    private static func getRecentlyUsedEmojiSection(localization: ElegantLocalization, userDefaultsStore: UserDefaults) -> EmojiSection? {
+        let emojiUsage = userDefaultsStore.emojisUsage
+        guard !emojiUsage.isEmpty else { return nil }
+
+        let mostUsedEmojis = emojiUsage
+            .sorted { $0.value > $1.value }
+            .map(\.key)
+            .prefix(Self.recentlyUsedEmojisCount)
+
+        return EmojiSection(
+            title: EmojiCategory.RecentlyUsed.localizedTitle(localization: localization),
+            icon: EmojiCategory.RecentlyUsed.image,
+            emojis: Array(mostUsedEmojis)
+        )
+    }
+
     /// Get emoji search results for a given prompt, using the default search algorithm. First looks for matches in aliases, then in tags, and lastly in description. Sorts search results by relevance.
     /// - Parameters:
     ///   - prompt: Search prompt to use.
