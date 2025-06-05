@@ -15,12 +15,14 @@ public struct ElegantEmojiPickerView: UIViewControllerRepresentable {
     private let localization: ElegantLocalization
     private let backgroundColor: Color?
     private let sourceNavigationBarButton: UIBarButtonItem?
+    private let userDefaultsStore: UserDefaults
 
     public init(
         selectedEmoji: Binding<Emoji?>,
         configuration: ElegantConfiguration = ElegantConfiguration(),
         localization: ElegantLocalization = ElegantLocalization(),
         background: Color? = nil,
+        userDefaultsStore: UserDefaults = .standard,
         sourceNavigationBarButton: UIBarButtonItem? = nil
     ) {
         _selectedEmoji = selectedEmoji
@@ -28,6 +30,7 @@ public struct ElegantEmojiPickerView: UIViewControllerRepresentable {
         self.configuration = configuration
         self.localization = localization
         self.backgroundColor = background
+        self.userDefaultsStore = userDefaultsStore
         self.sourceNavigationBarButton = sourceNavigationBarButton
     }
 
@@ -42,6 +45,7 @@ public struct ElegantEmojiPickerView: UIViewControllerRepresentable {
             configuration: configuration,
             localization: localization,
             background: background,
+            userDefaultsStore: userDefaultsStore,
             sourceNavigationBarButton: sourceNavigationBarButton
         )
 
