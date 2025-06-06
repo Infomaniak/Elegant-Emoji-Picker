@@ -30,8 +30,7 @@ open class ElegantEmojiPicker: UIViewController {
     var randomButton: UIButton?
     var resetButton: UIButton?
     var closeButton: UIButton?
-    
-    let fadeContainer = UIView()
+
     let collectionLayout: UICollectionViewFlowLayout = {
         let layout = UICollectionViewFlowLayout()
         layout.minimumLineSpacing = 10
@@ -166,24 +165,20 @@ open class ElegantEmojiPicker: UIViewController {
             rightMostItem.trailingAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.trailingAnchor, constant: -padding).isActive = true
         }
         
-        let gradient = CAGradientLayer()
-        gradient.colors = [UIColor.clear.cgColor, UIColor.black.cgColor]
-        gradient.startPoint = CGPoint(x: 0.5, y: 0)
-        gradient.endPoint = CGPoint(x: 0.5, y: 0.05)
-        fadeContainer.layer.mask = gradient
-        self.view.addSubview(fadeContainer, anchors: [.safeAreaLeading(0), .safeAreaTrailing(0), .bottom(0)])
-        fadeContainer.topAnchor.constraint(equalTo: closeButton?.bottomAnchor ?? resetButton?.bottomAnchor ?? randomButton?.bottomAnchor ?? searchFieldBackground?.bottomAnchor ?? self.view.safeAreaLayoutGuide.topAnchor).isActive = true
-        
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: collectionLayout)
         collectionView.backgroundColor = .clear
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.contentInset.bottom = 50 + padding // Compensating for the toolbar
         collectionView.translatesAutoresizingMaskIntoConstraints = false
-        collectionView!.register(EmojiCell.self, forCellWithReuseIdentifier: "EmojiCell")
-        collectionView!.register(CollectionViewSectionHeader.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: "SectionHeader")
-        fadeContainer.addSubview(collectionView, anchors: LayoutAnchor.fullFrame)
-        
+        collectionView.register(EmojiCell.self, forCellWithReuseIdentifier: "EmojiCell")
+        collectionView.register(CollectionViewSectionHeader.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: "SectionHeader")
+        view.addSubview(collectionView, anchors: [.safeAreaLeading(0), .safeAreaTrailing(0), .bottom(0)])
+        collectionView.topAnchor.constraint(
+            equalTo: closeButton?.bottomAnchor ?? resetButton?.bottomAnchor ?? randomButton?.bottomAnchor ?? searchFieldBackground?.bottomAnchor ?? view.safeAreaLayoutGuide.topAnchor,
+            constant: padding
+        ).isActive = true
+
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(LongPress))
         longPress.minimumPressDuration = 0.3
         longPress.delegate = self
@@ -211,8 +206,7 @@ open class ElegantEmojiPicker: UIViewController {
     
     public override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        collectionLayout.headerReferenceSize = CGSize(width: collectionView.frame.width, height: 50)
-        fadeContainer.layer.mask?.frame = fadeContainer.bounds
+        collectionLayout.headerReferenceSize = CGSize(width: collectionView.frame.width, height: 40)
     }
     
     @objc func TappedClose () {
