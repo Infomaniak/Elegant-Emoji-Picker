@@ -12,7 +12,10 @@ class CollectionViewSectionHeader: UICollectionReusableView {
     let label = UILabel()
     
     let padding = 16.0
-    
+
+    private static let font = UIFont.preferredFont(forTextStyle: .headline)
+    public static let fontSize = font.pointSize
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         self.InitLabel()
@@ -24,8 +27,8 @@ class CollectionViewSectionHeader: UICollectionReusableView {
     }
 
     func InitLabel() {
-        label.font = .preferredFont(forTextStyle: .headline)
+        label.font = Self.font
         label.textColor = .label
-        self.addSubview(label, anchors: [.leading(padding), .trailing(padding), .top(padding), .bottom(0)])
+        self.addSubview(label, anchors: [.leading(padding), .trailing(padding), .bottom(0)])
     }
 }
