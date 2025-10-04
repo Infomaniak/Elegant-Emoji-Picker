@@ -5,6 +5,7 @@
 ![Elegant Emoji Picker iOS version](https://img.shields.io/badge/iOS-13.0%2B-blue)
 ![Elegant Emoji Picker MacCatalyst version](https://img.shields.io/badge/MacCatalyst-13.0%2B-blue)
 ![Elegant Emoji Picker UIKit](https://img.shields.io/badge/Framework-UIKit-red)
+![Elegant Emoji Picker SwiftUI](https://img.shields.io/badge/Framework-SwiftUI-red)
 ![Elengat Emoji Picker Swift](https://img.shields.io/badge/Language-Swift-orange)
 ![Elegant Emoji Picker MIT License](https://img.shields.io/github/license/finalet/elegant-emoji-picker)
 ![Elengat Emoji Picker Contact](https://img.shields.io/badge/Contact-%40GrantOgany-darkgray?link=https://twitter.com/GrantOgany)
@@ -81,6 +82,39 @@ func emojiPicker(_ picker: ElegantEmojiPicker, didSelectEmoji emoji: Emoji?) {
 ```
 
 It is that easy. If simply offering emojis is all your soul desires, we are done. But if you are a more intricate type of coder and want more control, keep on readin'.
+
+### SwiftUI Usage (iOS 14+)
+
+For SwiftUI applications, you can use the `.emojiPicker` view modifier to present the emoji picker. You'll need two state variables: one to control the presentation of the picker and another to hold the selected emoji.
+
+```swift
+import SwiftUI
+import ElegantEmojiPicker
+
+struct MySwiftUIView: View {
+    @State private var isEmojiPickerPresented = false
+    @State private var selectedEmoji: Emoji? = nil
+
+    var body: some View {
+        VStack {
+            Text(selectedEmoji?.emoji ?? "No emoji selected")
+
+            Button(selectedEmoji == nil ? "Pick Emoji" : "Change Emoji") {
+                isEmojiPickerPresented.toggle()
+            }
+        }
+        .emojiPicker(
+            isPresented: $isEmojiPickerPresented,
+            selectedEmoji: $selectedEmoji
+            // detents: [.large] // Specify which presentation detents to use for the slide sheet (Optional)
+            // configuration: ElegantConfiguration(showRandom: false), // Pass configuration (Optional)
+            // localization: ElegantLocalization(searchFieldPlaceholder: "Find your emoji...") // Pass localization (Optional)
+        )
+    }
+}
+```
+
+The `selectedEmoji` will be an optional `Emoji` object. It will be `nil` if the user dismisses the picker without making a selection or resets their choice (if the reset button is shown and used).
 
 ## 🎨 Configuration
 

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0ACFC8ED2DD550EB005549F3 /* SwiftUIDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ACFC8EC2DD550EB005549F3 /* SwiftUIDemoView.swift */; };
 		3713370629BBF51C00952B29 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3713370529BBF51C00952B29 /* AppDelegate.swift */; };
 		3713370829BBF51C00952B29 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3713370729BBF51C00952B29 /* SceneDelegate.swift */; };
 		3713370A29BBF51C00952B29 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3713370929BBF51C00952B29 /* ViewController.swift */; };
@@ -15,6 +16,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0ACFC8EC2DD550EB005549F3 /* SwiftUIDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIDemoView.swift; sourceTree = "<group>"; };
 		3713370229BBF51C00952B29 /* Demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Demo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3713370529BBF51C00952B29 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		3713370729BBF51C00952B29 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -59,6 +61,7 @@
 				3713370529BBF51C00952B29 /* AppDelegate.swift */,
 				3713370729BBF51C00952B29 /* SceneDelegate.swift */,
 				3713370929BBF51C00952B29 /* ViewController.swift */,
+				0ACFC8EC2DD550EB005549F3 /* SwiftUIDemoView.swift */,
 				3713370E29BBF51E00952B29 /* Assets.xcassets */,
 				3713371329BBF51E00952B29 /* Info.plist */,
 			);
@@ -96,7 +99,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1420;
-				LastUpgradeCheck = 1420;
+				LastUpgradeCheck = 1630;
 				TargetAttributes = {
 					3713370129BBF51C00952B29 = {
 						CreatedOnToolsVersion = 14.2;
@@ -143,6 +146,7 @@
 				3713370A29BBF51C00952B29 /* ViewController.swift in Sources */,
 				3713370629BBF51C00952B29 /* AppDelegate.swift in Sources */,
 				3713370829BBF51C00952B29 /* SceneDelegate.swift in Sources */,
+				0ACFC8ED2DD550EB005549F3 /* SwiftUIDemoView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
