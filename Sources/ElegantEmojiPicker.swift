@@ -242,8 +242,13 @@ open class ElegantEmojiPicker: UIViewController {
 
 extension ElegantEmojiPicker {
     func didSelectSection(_ index: Int) {
-        scrollToSection(index)
-
+        if let headerAttributes = collectionView.layoutAttributesForSupplementaryElement(ofKind: UICollectionView.elementKindSectionHeader, at: IndexPath(item: 0, section: index)) {
+            let targetY = headerAttributes.frame.minY - collectionView.adjustedContentInset.top
+            collectionView.setContentOffset(CGPoint(x: 0, y: targetY), animated: true)
+        } else {
+            collectionView.scrollToItem(at: IndexPath(row: 0, section: index), at: .top, animated: true)
+        }
+        
         overridingFocusedSection = true
         self.focusedSection = index
         self.toolbar?.UpdateCorrectSelection(animated: true)
