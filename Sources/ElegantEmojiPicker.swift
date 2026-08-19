@@ -99,8 +99,13 @@ open class ElegantEmojiPicker: UIViewController {
         
         self.presentationController?.delegate = self
         
+        if #unavailable(iOS 26.0) { // in iOS 26 they forced opaque white background (in large detent) and liquid glass (in medium detent), so we only need the blur for OS below it
+            self.view.addSubview(UIVisualEffectView(effect: UIBlurEffect(style: .systemUltraThinMaterial)), anchors: LayoutAnchor.fullFrame)
+        }
+        
         if config.showSearch {
             searchFieldBackground = UIVisualEffectView(effect: UIBlurEffect(style: .systemUltraThinMaterial))
+            searchFieldBackground?.backgroundColor = .systemBackground.withAlphaComponent(0.5)
             searchFieldBackground!.layer.cornerRadius = 8
             searchFieldBackground!.clipsToBounds = true
             searchFieldBackground!.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(TappedSearchBackground)))
@@ -237,8 +242,13 @@ open class ElegantEmojiPicker: UIViewController {
 
 extension ElegantEmojiPicker {
     func didSelectSection(_ index: Int) {
-        scrollToSection(index)
-
+        if let headerAttributes = collectionView.layoutAttributesForSupplementaryElement(ofKind: UICollectionView.elementKindSectionHeader, at: IndexPath(item: 0, section: index)) {
+            let targetY = headerAttributes.frame.minY - collectionView.adjustedContentInset.top
+            collectionView.setContentOffset(CGPoint(x: 0, y: targetY), animated: true)
+        } else {
+            collectionView.scrollToItem(at: IndexPath(row: 0, section: index), at: .top, animated: true)
+        }
+        
         overridingFocusedSection = true
         self.focusedSection = index
         self.toolbar?.UpdateCorrectSelection(animated: true)
@@ -285,19 +295,19 @@ extension ElegantEmojiPicker: UITextFieldDelegate {
         return true
     }
     
-    @objc func searchFieldChanged (_ textField: UITextField) {
+    @objc func searchFieldChanged(_ textField: UITextField) {
         let count = textField.text!.count
         let searchTerm = textField.text!
         DispatchQueue.global(qos: .userInteractive).async { [weak self] in
             guard let self = self else { return }
-            
-            if count == 0 {
-                self.searchResults = nil
-            } else {
-                self.searchResults = self.delegate?.emojiPicker(self, searchResultFor: searchTerm, fromAvailable: self.emojiSections) ?? ElegantEmojiPicker.getSearchResults(searchTerm, fromAvailable: self.emojiSections)
+
+            var results: [Emoji]?
+            if count != 0 {
+                results = self.delegate?.emojiPicker(self, searchResultFor: searchTerm, fromAvailable: self.emojiSections) ?? ElegantEmojiPicker.getSearchResults(searchTerm, fromAvailable: self.emojiSections)
             }
-            
+
             DispatchQueue.main.async {
+                self.searchResults = results
                 self.collectionView?.reloadData()
                 self.collectionView.setContentOffset(.zero, animated: false)
             }
@@ -526,8 +536,8 @@ extension ElegantEmojiPicker {
     /// Returns an array of all available emojis. Use this method to retrieve emojis for your own collection.
     /// - Returns: Array of all emojis.
     static public func getAllEmoji () -> [Emoji] {
-        let emojiData = (try? Data(contentsOf: Bundle.module.url(forResource: "Emoji Unicode 16.0", withExtension: "json")!))!
-        return try! JSONDecoder().decode([Emoji].self, from: emojiData)
+        let emojiData = (try? Data(contentsOf: Bundle.module.url(forResource: "Emoji Unicode 17.0", withExtension: "json")!))!
+        return (try? JSONDecoder().decode([Emoji].self, from: emojiData)) ?? []
     }
     
     /// Returns an array of all available emojis categorized by section.
